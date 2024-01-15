@@ -22,3 +22,6 @@ El usuario y contraseña para acceder a la API es: admin/admin
 5. En la carpeta raíz del proyecto ejecuta el comando `dotnet restore`
 6. En la carpeta raíz del proyecto ejecuta el comando `dotnet run`
 
+## Documentacion de la API
+Se puede visualizar la documentacion al ejecutar el proyecto en la siguiente url:
+<url>/swagger/index.html
