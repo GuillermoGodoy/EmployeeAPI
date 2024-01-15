@@ -9,13 +9,13 @@ El usuario y contraseña para acceder a la API es: admin/admin
 
 ## Requisitos
 
-- [Dotnet runtime 8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [Dotnet SDK 8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [MongoDB](https://www.mongodb.com/try/download/community) 
 
 ## Configuración del Proyecto
 
 1. Clona este repositorio
-2. Instalar el SDK o el Runtime de Dotnet 8
+2. Instalar el SDK de Dotnet 8
 3. Instalar MongoDB
 4. Tener una instancia de MongoDB corriendo en el puerto 27017 (mongodb://root:example@localhost:27017/)
     a. En caso de no tener una instancia de MongoDB corriendo en el puerto 27017, puedes cambiar la cadena de conexión en el archivo appsettings.json
