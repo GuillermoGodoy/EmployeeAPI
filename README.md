@@ -1,6 +1,6 @@
 # EmployeeAPI
 
-API con CRUD de Empleados y Login, requere autenticación para poder acceder a los endpoints.
+API con CRUD de Empleados y Login, requiere autenticación para poder acceder a los endpoints.
 El usuario y contraseña para acceder a la API es: admin/admin
 {
     "username": "admin",
@@ -16,12 +16,12 @@ El usuario y contraseña para acceder a la API es: admin/admin
 
 1. Clona este repositorio
 2. Instalar el SDK o el Runtime de Dotnet 8
-3. Instala MongoDB
+3. Instalar MongoDB
 4. Tener una instancia de MongoDB corriendo en el puerto 27017 (mongodb://root:example@localhost:27017/)
     a. En caso de no tener una instancia de MongoDB corriendo en el puerto 27017, puedes cambiar la cadena de conexión en el archivo appsettings.json
 5. En la carpeta raíz del proyecto ejecuta el comando `dotnet restore`
 6. En la carpeta raíz del proyecto ejecuta el comando `dotnet run`
 
-## Documentacion de la API
-Se puede visualizar la documentacion al ejecutar el proyecto en la siguiente url:
+## Documentación de la API
+Se puede visualizar la documentación al ejecutar el proyecto en la siguiente url:
 <url>/swagger/index.html
