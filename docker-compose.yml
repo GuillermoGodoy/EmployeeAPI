@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: employee-api:latest
+    platform: linux/amd64
+    ports:
+      - 8080:8080
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"   # number of files or file count
+        max-size: "10m" # file size
