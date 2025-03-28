@@ -29,7 +29,7 @@ namespace EmployeeAPI.Models
                 context.Response.StatusCode = 200;
                 return;
             }
-            if ((context.Request.Path.Value == "/api/auth/login") && (context.Request.Method == "POST"))
+            if ((context.Request.Path.Value?.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) == true) && (context.Request.Method == "POST"))
             {
                 context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { (string)context.Request.Headers["Origin"] });
                 context.Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Origin" });
