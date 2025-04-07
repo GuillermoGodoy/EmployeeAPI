@@ -11,7 +11,10 @@ namespace EmployeeAPI.Models
         public string? Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
+        public string? Department_Id { get; set; }
         public string Department { get; set; }
+        public string Position { get; set; }
+        public string? Position_Id { get; set; }
 
         public Dictionary<string, object> ToDictionary()
         {

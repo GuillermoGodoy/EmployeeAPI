@@ -21,7 +21,11 @@ builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("Mo
 builder.Services.AddSingleton<MongoDBService>();
 
 var app = builder.Build();
-
+using (var scope = app.Services.CreateScope())
+{
+    var mongoService = scope.ServiceProvider.GetRequiredService<MongoDBService>();
+    await mongoService.CreateUniqueIndexOnEmailAsync();
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

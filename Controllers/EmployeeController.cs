@@ -17,8 +17,8 @@ namespace EmployeeAPI.Controllers
         }
         // GET: api/<EmployeeController>
         [HttpGet]
-        public async Task<List<Employee>> Get() =>
-        await _mongoDBService.GetAsync();
+        public async Task<List<Employee>> Get([FromQuery] string? departmentName, [FromQuery] string? positionName) =>
+            await _mongoDBService.GetAsync(departmentName, positionName);
 
         // GET api/<EmployeeController>/5
         [HttpGet("{id:length(24)}")]
@@ -34,6 +34,14 @@ namespace EmployeeAPI.Controllers
             return Employee;
         }
 
+        [HttpGet("departments")]
+        public async Task<List<Department>> GetDepartments() =>
+            await _mongoDBService.GetDepartmentsAsync();
+
+        [HttpGet("departments/{departmentId}/positions")]
+        public async Task<List<Position>> GetPositions(string departmentId) =>
+            await _mongoDBService.GetPositionsByDepartmentIdAsync(departmentId);
+
         // POST api/<EmployeeController>
         [HttpPost]
         public async Task<IActionResult> Post(Employee newEmployee)
@@ -42,6 +50,35 @@ namespace EmployeeAPI.Controllers
             {
                 return BadRequest();
             }
+            // Verificar si ya existe un empleado con el mismo Email
+            var existingEmployee = await _mongoDBService.GetByEmailAsync(newEmployee.Email);
+            if (existingEmployee is not null)
+            {
+                return Conflict($"An employee with the email '{newEmployee.Email}' already exists.");
+            }
+
+            // Verificar si el departamento ya existe
+            var department = await _mongoDBService.GetDepartmentByNameAsync(newEmployee.Department);
+            if (department is null)
+            {
+                // Crear el departamento si no existe
+                department = await _mongoDBService.CreateDepartmentAsync(newEmployee.Department);
+            }
+
+            // Asignar el ID del departamento al empleado
+            newEmployee.Department_Id = department.Id;
+
+            // Verificar si el puesto ya existe en el departamento
+            var position = await _mongoDBService.GetPositionByNameAndDepartmentAsync(newEmployee.Position, department.Id);
+            if (position is null)
+            {
+                // Crear el puesto si no existe
+                position = await _mongoDBService.CreatePositionAsync(newEmployee.Position, department.Id);
+            }
+
+            // Asignar el ID del puesto al empleado
+            newEmployee.Position_Id = position.Id;
+
             await _mongoDBService.CreateAsync(newEmployee);
 
             return CreatedAtAction(nameof(Get), new { id = newEmployee.Id }, newEmployee);
