@@ -17,4 +17,12 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.2.0" />
   </ItemGroup>
 
+  <!-- El proyecto de pruebas vive en un subdirectorio y el SDK Web incluye **/*.cs por defecto. -->
+  <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <Content Remove="Tests\**" />
+    <None Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+  </ItemGroup>
+
 </Project>

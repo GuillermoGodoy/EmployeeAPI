@@ -10,6 +10,9 @@ services:
     platform: linux/amd64
     ports:
       - 8080:8080
+      - 8082:8081 
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
     logging:
       driver: "json-file"
       options:

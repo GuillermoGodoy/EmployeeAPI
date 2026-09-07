@@ -1,4 +1,5 @@
 ﻿using EmployeeAPI.Services;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -8,33 +9,37 @@ namespace EmployeeAPI.Models
     public class AuthenticationMiddleware
     {
         private readonly RequestDelegate _next;
-        public AuthenticationMiddleware(RequestDelegate next)
+        private readonly JwtSettings _jwtSettings;
+
+        public AuthenticationMiddleware(RequestDelegate next, IOptions<JwtSettings> jwtSettings)
         {
             _next = next;
+            _jwtSettings = jwtSettings.Value;
         }
         public async Task Invoke(HttpContext context)
         {
             if (context.Request.Method == "OPTIONS")
             {
-                context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { (string)context.Request.Headers["Origin"] });
-                context.Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Origin" });
-                context.Response.Headers.Add("Access-Control-Allow-Methods", new[] { "GET, POST, PUT, DELETE, OPTIONS, PATCH" });
-                context.Response.Headers.Add("Access-Control-Allow-Credentials", new[] { "true" });
+                SetCorsHeaders(context);
                 context.Response.StatusCode = 200;
                 //await _next.Invoke(context);
                 return;
             }
-            if ((context.Request.Path.Value == "/health") && (context.Request.Method == "GET"))
+            if ((context.Request.Path.Value?.Equals("/health", StringComparison.OrdinalIgnoreCase) == true) && (context.Request.Method == "GET"))
             {
-                context.Response.StatusCode = 200;
+                SetCorsHeaders(context);
+                await _next.Invoke(context);
                 return;
             }
             if ((context.Request.Path.Value?.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) == true) && (context.Request.Method == "POST"))
             {
-                context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { (string)context.Request.Headers["Origin"] });
-                context.Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Origin" });
-                context.Response.Headers.Add("Access-Control-Allow-Methods", new[] { "GET, POST, PUT, DELETE, OPTIONS, PATCH" });
-                context.Response.Headers.Add("Access-Control-Allow-Credentials", new[] { "true" });
+                SetCorsHeaders(context);
+                await _next.Invoke(context);
+                return;
+            }
+            if (context.Request.Path.StartsWithSegments("/swagger"))
+            {
+                SetCorsHeaders(context);
                 await _next.Invoke(context);
                 return;
             }
@@ -43,7 +48,7 @@ namespace EmployeeAPI.Models
             {
                 var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes("00000000000000000000000000000000");
+                var key = Encoding.ASCII.GetBytes(_jwtSettings.SecretKey);
                 //validar si el token es valido, si es valido continuar con el request, sino retornar 401
                 try
                 {
@@ -52,7 +57,9 @@ namespace EmployeeAPI.Models
                         IssuerSigningKey = new SymmetricSecurityKey(key),
                         ValidateIssuerSigningKey = true,
                         ValidateIssuer = false,
-                        ValidateAudience = false
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
                     }, out SecurityToken validatedToken);
                 }
                 catch (Exception)
@@ -66,11 +73,16 @@ namespace EmployeeAPI.Models
                 context.Response.StatusCode = 401;
                 return;
             }
-            context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { (string)context.Request.Headers["Origin"] });
-            context.Response.Headers.Add("Access-Control-Allow-Headers", new[] { "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Origin" });
-            context.Response.Headers.Add("Access-Control-Allow-Methods", new[] { "GET, POST, PUT, DELETE, OPTIONS, PATCH" });
-            context.Response.Headers.Add("Access-Control-Allow-Credentials", new[] { "true" });
+            SetCorsHeaders(context);
             await _next.Invoke(context);
+        }
+
+        private static void SetCorsHeaders(HttpContext context)
+        {
+            context.Response.Headers["Access-Control-Allow-Origin"] = context.Request.Headers["Origin"];
+            context.Response.Headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Origin";
+            context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH";
+            context.Response.Headers["Access-Control-Allow-Credentials"] = "true";
         }
     }
 }

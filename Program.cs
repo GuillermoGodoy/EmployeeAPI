@@ -17,6 +17,7 @@ builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true;
 });
 builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("MongoDB"));
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
 builder.Services.AddSingleton<MongoDBService>();
 
@@ -25,6 +26,8 @@ using (var scope = app.Services.CreateScope())
 {
     var mongoService = scope.ServiceProvider.GetRequiredService<MongoDBService>();
     await mongoService.CreateUniqueIndexOnEmailAsync();
+    await mongoService.CreateTimekeeperIndexesAsync();
+    await mongoService.SeedPunchTypesAsync();
 }
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

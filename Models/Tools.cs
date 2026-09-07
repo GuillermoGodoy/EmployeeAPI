@@ -7,7 +7,7 @@ namespace EmployeeAPI.Models
 {
     public class Tools
     {
-        static public User generateSecurityTokenDescriptor(string secretKey, User userFind)
+        static public User generateSecurityTokenDescriptor(string secretKey, User userFind, int expirationHours = 12)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(secretKey);
@@ -17,7 +17,7 @@ namespace EmployeeAPI.Models
                 {
                         new Claim(ClaimTypes.Name, userFind.username)
                 }),
-                Expires = DateTime.UtcNow.AddHours(12),
+                Expires = DateTime.UtcNow.AddHours(expirationHours),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
                                    SecurityAlgorithms.HmacSha256Signature)
             };
@@ -53,7 +53,7 @@ namespace EmployeeAPI.Models
                     var expirationDate = jwtSecurityToken.ValidTo;
 
                     // Comparar con la fecha y hora actual
-                    if (expirationDate <= DateTime.UtcNow)
+                    if (expirationDate >= DateTime.UtcNow)
                     {
                         // Token válido y no ha expirado
                         return true;
@@ -69,5 +69,8 @@ namespace EmployeeAPI.Models
                 return false;
             }
         }
+
+        static public DateTime GetExpirationUtc(string token) =>
+            new JwtSecurityTokenHandler().ReadJwtToken(token).ValidTo;
     }
 }
