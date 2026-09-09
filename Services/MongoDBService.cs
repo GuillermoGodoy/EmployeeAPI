@@ -52,6 +52,29 @@ namespace EmployeeAPI.Services
             return await _listCollection.Find(filter).ToListAsync();
         }
 
+        public async Task<(List<Employee> Items, long TotalCount)> GetPagedAsync(string? departmentName, string? positionName, int page, int pageSize)
+        {
+            var filter = Builders<Employee>.Filter.Empty;
+
+            if (!string.IsNullOrEmpty(departmentName))
+            {
+                filter &= Builders<Employee>.Filter.Eq(e => e.Department, departmentName);
+            }
+
+            if (!string.IsNullOrEmpty(positionName))
+            {
+                filter &= Builders<Employee>.Filter.Eq(e => e.Position, positionName);
+            }
+
+            var totalCount = await _listCollection.CountDocumentsAsync(filter);
+            var items = await _listCollection.Find(filter)
+                .Skip((page - 1) * pageSize)
+                .Limit(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+
         public async Task<Employee?> GetAsync(string id) =>
             await _listCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
         //Get by Email GetByEmailAsync
@@ -260,6 +283,48 @@ namespace EmployeeAPI.Services
                 new PunchType { Code = "BREAK_IN", Name = "Inicio de colación" },
                 new PunchType { Code = "BREAK_OUT", Name = "Término de colación" }
             });
+        }
+
+        public async Task SeedEmployeesAsync()
+        {
+            const int targetCount = 2000;
+            var currentCount = await _listCollection.CountDocumentsAsync(_ => true);
+
+            if (currentCount >= targetCount)
+            {
+                return;
+            }
+
+            var existingEmails = (await _listCollection
+                .Find(_ => true)
+                .Project(employee => employee.Email)
+                .ToListAsync())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var employeesToCreate = new List<Employee>();
+            var seedNumber = 1;
+
+            while (currentCount + employeesToCreate.Count < targetCount)
+            {
+                var email = $"seed.employee.{seedNumber:D4}@example.com";
+                seedNumber++;
+
+                if (!existingEmails.Add(email))
+                {
+                    continue;
+                }
+
+                employeesToCreate.Add(new Employee
+                {
+                    Name = $"Empleado Demo {seedNumber - 1:D4}",
+                    Email = email,
+                    Dni = $"SEED-{seedNumber - 1:D4}",
+                    Department = $"Departamento {(seedNumber - 2) % 10 + 1:D2}",
+                    Position = $"Cargo {(seedNumber - 2) % 8 + 1:D2}"
+                });
+            }
+
+            await _listCollection.InsertManyAsync(employeesToCreate);
         }
 
         public async Task PingAsync() =>

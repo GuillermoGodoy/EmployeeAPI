@@ -16,9 +16,26 @@ namespace EmployeeAPI.Controllers
             _mongoDBService = mongoDBService;
         }
         // GET: api/<EmployeeController>
+        // Si se envían page/pageSize, la respuesta se pagina y se agregan headers X-Total-Count / X-Total-Pages.
+        // Si no, se mantiene el comportamiento anterior (retorna el listado completo).
         [HttpGet]
-        public async Task<List<Employee>> Get([FromQuery] string? departmentName, [FromQuery] string? positionName) =>
-            await _mongoDBService.GetAsync(departmentName, positionName);
+        public async Task<List<Employee>> Get([FromQuery] string? departmentName, [FromQuery] string? positionName, [FromQuery] int? page, [FromQuery] int? pageSize)
+        {
+            if (page is null && pageSize is null)
+            {
+                return await _mongoDBService.GetAsync(departmentName, positionName);
+            }
+
+            var currentPage = page is > 0 ? page.Value : 1;
+            var currentPageSize = pageSize is > 0 ? pageSize.Value : 20;
+
+            var (items, totalCount) = await _mongoDBService.GetPagedAsync(departmentName, positionName, currentPage, currentPageSize);
+
+            Response.Headers.Append("X-Total-Count", totalCount.ToString());
+            Response.Headers.Append("X-Total-Pages", ((long)Math.Ceiling(totalCount / (double)currentPageSize)).ToString());
+
+            return items;
+        }
 
         // GET api/<EmployeeController>/5
         [HttpGet("{id:length(24)}")]

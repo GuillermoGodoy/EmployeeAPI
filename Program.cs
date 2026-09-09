@@ -20,12 +20,14 @@ builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("Mo
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
 builder.Services.AddSingleton<MongoDBService>();
+builder.Services.AddSingleton<ReportService>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var mongoService = scope.ServiceProvider.GetRequiredService<MongoDBService>();
     await mongoService.CreateUniqueIndexOnEmailAsync();
+    await mongoService.SeedEmployeesAsync();
     await mongoService.CreateTimekeeperIndexesAsync();
     await mongoService.SeedPunchTypesAsync();
 }
